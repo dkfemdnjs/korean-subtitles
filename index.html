@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AutoSub KR - 무료 동영상 자동 한국어 자막 생성기 -TESTER</title>
+  <title>AutoSub KR - 무료 동영상 자동 한국어 자막 생성기</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -41,7 +41,6 @@
     ::-webkit-scrollbar-thumb { background: #3b3b4f; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
     
-    /* 모바일 터치 최적화 */
     .touch-action-manipulation { touch-action: manipulation; }
     
     /* 비디오 오버레이 자막 박스 */
@@ -62,7 +61,7 @@
         <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
           AutoSub KR
         </h1>
-        <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold">Zero-Key</span>
+        <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-semibold">Zero-Key AI</span>
       </div>
       <div class="flex items-center gap-2 text-xs">
         <span class="text-slate-400 flex items-center gap-1.5 py-1 px-2.5 rounded-lg bg-slate-800 border border-slate-700/60">
@@ -76,17 +75,17 @@
   <!-- 메인 컨테이너 -->
   <main class="flex-1 max-w-4xl w-full mx-auto p-4 sm:p-6 space-y-6">
 
-    <!-- 배너 / 가이드 -->
+    <!-- 안내 배너 -->
     <section class="bg-gradient-to-br from-indigo-950/40 via-slate-900 to-slate-900 border border-indigo-900/40 rounded-2xl p-4 sm:p-5 shadow-xl relative overflow-hidden">
       <div class="relative z-10">
         <div class="flex items-center gap-2 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
-          <i class="fa-solid fa-bolt"></i> 100% 무과금 / API 키 불필요 / 브라우저 단독 실행
+          <i class="fa-solid fa-bolt"></i> 100% 무료 / API 키 불필요 / 실제 대사 인식 및 한국어 번역
         </div>
         <h2 class="text-base sm:text-lg font-bold text-slate-100">
-          동영상을 선택하면 대사를 <span class="text-indigo-400">한국어 자막</span>으로 즉시 번역합니다
+          동영상 속 인물의 실제 대사를 <span class="text-indigo-400">한국어 자막</span>으로 즉시 번역합니다
         </h2>
         <p class="text-xs sm:text-sm text-slate-400 mt-1 leading-relaxed">
-          무거운 영상 원본을 외부로 업로드하지 않아 모바일에서도 데이터 낭비 없이 2~3초 만에 빠르고 안전하게 작동합니다.
+          별도의 회원가입이나 API 키 발급 없이 무료 오픈소스 Whisper AI를 통해 영상 속 실제 음성을 듣고 한국어로 번역합니다.
         </p>
       </div>
     </section>
@@ -102,7 +101,7 @@
       </div>
 
       <div id="dropZone" class="group relative border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl p-6 sm:p-8 text-center transition-all bg-slate-900/40 hover:bg-slate-900/70 cursor-pointer touch-action-manipulation">
-        <input type="file" id="videoInput" accept="video/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+        <input type="file" id="videoInput" accept="video/*,audio/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
         <div class="space-y-3 pointer-events-none">
           <div class="w-14 h-14 mx-auto rounded-full bg-slate-800 group-hover:bg-indigo-600/20 text-slate-400 group-hover:text-indigo-400 flex items-center justify-center transition-all">
             <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
@@ -111,7 +110,7 @@
             <p class="text-sm sm:text-base font-medium text-slate-200">
               <span class="text-indigo-400 font-semibold underline underline-offset-2">동영상 탭하여 선택</span> 또는 드래그앤드롭
             </p>
-            <p class="text-xs text-slate-500 mt-1">MP4, MOV, WebM 등 모든 모바일/PC 동영상 지원</p>
+            <p class="text-xs text-slate-500 mt-1">MP4, MOV, WebM, M4V 등 모든 동영상 지원</p>
           </div>
         </div>
       </div>
@@ -131,16 +130,16 @@
 
       <!-- 엔진 선택 탭 -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <!-- 모드 1: 초고속 공용 엔진 (기본 추천) -->
+        <!-- 모드 1: 초고속 공용 Whisper AI 엔진 (기본 추천) -->
         <label class="relative flex flex-col p-3.5 rounded-xl border-2 border-indigo-600 bg-indigo-950/20 cursor-pointer transition-all">
           <div class="flex items-center justify-between mb-1">
             <span class="text-xs font-bold text-indigo-400 flex items-center gap-1.5">
-              <i class="fa-solid fa-cloud"></i> 초고속 공용 AI 엔진 (추천)
+              <i class="fa-solid fa-cloud"></i> 초고속 공용 Whisper AI (추천)
             </span>
             <input type="radio" name="aiEngine" value="cloud" checked class="text-indigo-600 focus:ring-0">
           </div>
           <p class="text-[11px] text-slate-400 leading-snug">
-            무료 오픈소스 Whisper + 다이렉트 한국어 번역. 모바일 배터리/메모리 부담 없이 2~3초 만에 쾌속 처리.
+            오픈소스 공용 Whisper Large 엔진으로 실제 음성을 고정밀 인식 후 다이렉트 한국어 번역.
           </p>
         </label>
 
@@ -153,7 +152,7 @@
             <input type="radio" name="aiEngine" value="local" class="text-indigo-600 focus:ring-0">
           </div>
           <p class="text-[11px] text-slate-400 leading-snug">
-            외부 통신 0%! 내 기기 브라우저 메모리에서 직접 경량 AI를 가동. 인터넷 없는 오프라인에서도 작동.
+            외부 전송 0%! 내 기기 브라우저 메모리 안에서 직접 Whisper 경량 모델을 실행.
           </p>
         </label>
       </div>
@@ -172,10 +171,10 @@
         </select>
       </div>
 
-      <!-- 실행 버튼: 반드시 type="button" 지정하여 폼 전송/리로드 원천 방지 -->
+      <!-- 실행 버튼 -->
       <button type="button" id="btnStartProcess" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-sm shadow-lg shadow-indigo-600/30 transition-all active:scale-[0.99] flex items-center justify-center gap-2">
         <i class="fa-solid fa-wand-magic-sparkles"></i>
-        <span>한국어 자막 자동 생성 시작</span>
+        <span>실제 대사 분석 및 한국어 자막 생성</span>
       </button>
     </section>
 
@@ -191,7 +190,7 @@
         <div id="progressBar" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full w-0 transition-all duration-300"></div>
       </div>
       <p id="progressSubText" class="text-[11px] text-slate-500">
-        동영상의 음성 구간을 분석하여 한국어 자막을 생성하고 있습니다...
+        영상 속 인물의 실제 대사를 듣고 글자로 변환한 뒤 한국어로 번역하고 있습니다...
       </p>
     </section>
 
@@ -207,14 +206,13 @@
         </span>
       </div>
 
-      <!-- 비디오 뷰어 컨테이너 -->
+      <!-- 비디오 뷰어 컨테이너 (사용자가 자유롭게 재생/스크롤 가능) -->
       <div class="relative bg-black rounded-2xl overflow-hidden shadow-2xl border border-slate-800 aspect-video flex items-center justify-center group">
         <video id="previewVideo" playsinline controls class="w-full h-full object-contain"></video>
 
         <!-- 자막 오버레이 (화면 하단) -->
         <div id="subtitleOverlayContainer" class="absolute bottom-12 inset-x-4 pointer-events-none flex justify-center text-center transition-all">
           <div id="subtitleOverlay" class="subtitle-overlay-box px-3 py-1.5 rounded-lg text-white font-extrabold text-sm sm:text-lg tracking-wide max-w-[90%] transition-all opacity-0">
-            <!-- 실시간 동기화 자막 텍스트 들어가는 곳 -->
           </div>
         </div>
       </div>
@@ -247,16 +245,20 @@
         </div>
 
         <div id="subtitleList" class="space-y-2 max-h-72 overflow-y-auto pr-1">
-          <!-- 자막 카드 아이템 동적 주입 -->
         </div>
       </div>
 
-      <!-- STEP 5: 다운로드 / 리턴 버튼군 -->
+      <!-- STEP 5: 다운로드 영역 -->
       <div class="bg-gradient-to-r from-slate-900 via-indigo-950/20 to-slate-900 border border-indigo-900/50 rounded-2xl p-4 sm:p-5 space-y-3">
-        <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
-          <span class="w-5 h-5 rounded-full bg-emerald-600 text-[11px] flex items-center justify-center font-bold">4</span>
-          완성된 자막 / 영상 저장하기
-        </h3>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+          <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+            <span class="w-5 h-5 rounded-full bg-emerald-600 text-[11px] flex items-center justify-center font-bold">4</span>
+            완성된 자막 / 영상 저장하기
+          </h3>
+          <span class="text-[11px] text-slate-400">
+            <i class="fa-solid fa-clock"></i> 저장 시 파일명에 <span class="text-indigo-400 font-medium">_일자_시간</span>이 자동 부여됩니다
+          </span>
+        </div>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <!-- 1초 SRT 자막 파일 다운로드 -->
@@ -271,23 +273,42 @@
             <span>자막 합성 영상 다운로드 (MP4/WebM)</span>
           </button>
         </div>
-
-        <!-- 영상 합성 렌더링 프로그레스 -->
-        <div id="exportProgressContainer" class="hidden space-y-1.5 pt-2">
-          <div class="flex justify-between text-xs text-slate-400">
-            <span>자막 영상을 화면에 새겨 인코딩 중... (창을 닫지 마세요)</span>
-            <span id="exportProgressPercent">0%</span>
-          </div>
-          <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800">
-            <div id="exportProgressBar" class="bg-emerald-500 h-full w-0 transition-all duration-150"></div>
-          </div>
-        </div>
       </div>
     </section>
 
   </main>
 
-  <!-- 숨겨진 렌더링용 캔버스 -->
+  <!-- 독립된 백그라운드 영상 합성용 모달 (미리보기 스크롤바와 완전 격리) -->
+  <div id="exportModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full text-center space-y-4 shadow-2xl">
+      <div class="w-12 h-12 rounded-full bg-emerald-600/20 text-emerald-400 flex items-center justify-center mx-auto text-xl">
+        <i class="fa-solid fa-film fa-bounce"></i>
+      </div>
+      <div>
+        <h4 class="text-base font-bold text-slate-100">자막 합성 동영상 렌더링 중...</h4>
+        <p class="text-xs text-slate-400 mt-1">
+          화면에 자막을 합성하여 새 비디오 파일로 인코딩하고 있습니다.<br>잠시만 기다려주세요 (창을 닫지 마세요).
+        </p>
+      </div>
+      
+      <!-- 전용 프로그레스 바 -->
+      <div class="space-y-1.5 text-left">
+        <div class="flex justify-between text-xs text-slate-400">
+          <span>합성 진행률</span>
+          <span id="exportModalPercent" class="font-bold text-emerald-400">0%</span>
+        </div>
+        <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
+          <div id="exportModalProgressBar" class="bg-emerald-500 h-full w-0 transition-all duration-100"></div>
+        </div>
+      </div>
+
+      <button type="button" id="btnCancelExport" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 transition-colors">
+        합성 취소
+      </button>
+    </div>
+  </div>
+
+  <!-- 독립된 오프스크린 렌더링 캔버스 -->
   <canvas id="renderCanvas" class="hidden"></canvas>
 
   <!-- 하단 푸터 -->
@@ -298,16 +319,18 @@
   <!-- 메인 스크립트 로직 -->
   <script>
     $(document).ready(function() {
-      // 전역 상태 관리
       let selectedFile = null;
       let videoObjectUrl = null;
       let subtitles = [];
       let currentSubStyle = 'yellow';
       let currentSubSize = 'md';
+      let isExporting = false;
+      let exportRecorder = null;
+      let exportVideoElem = null;
 
-      const $video = $('#previewVideo')[0];
+      const $previewVideo = $('#previewVideo')[0];
 
-      // 1. 파일 선택 및 드래그 앤 드롭
+      // 1. 파일 선택 및 드래그앤드롭
       $('#videoInput').on('change', function(e) {
         if (e.target.files && e.target.files[0]) {
           handleFileSelect(e.target.files[0]);
@@ -336,13 +359,13 @@
           URL.revokeObjectURL(videoObjectUrl);
         }
         videoObjectUrl = URL.createObjectURL(file);
-        $video.src = videoObjectUrl;
+        $previewVideo.src = videoObjectUrl;
 
         $('#controlSection').removeClass('hidden');
         $('html, body').animate({ scrollTop: $('#controlSection').offset().top - 70 }, 400);
       }
 
-      // 2. 엔진 선택 탭 라디오 버튼 피드백
+      // 2. 엔진 라디오 버튼
       $('input[name="aiEngine"]').on('change', function() {
         $('input[name="aiEngine"]').each(function() {
           const parent = $(this).closest('label');
@@ -354,7 +377,7 @@
         });
       });
 
-      // 3. 자막 생성 버튼 클릭 이벤트 (e.preventDefault()로 브라우저 리로드 100% 방지)
+      // 3. 자막 생성 버튼
       $('#btnStartProcess').on('click', async function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -366,32 +389,36 @@
 
         $('#controlSection').addClass('opacity-60 pointer-events-none');
         $('#progressSection').removeClass('hidden');
-        updateProgress(15, '동영상 정보 및 음성 트랙 확인 중...');
+        updateProgress(10, '동영상 정보 및 음성 트랙 확인 중...');
 
         try {
-          // 비디오 duration 준비 대기 (메모리 폭발하는 decodeAudioData 사용 안 함)
-          let duration = $video.duration;
+          // 비디오 duration 준비 대기
+          let duration = $previewVideo.duration;
           if (!duration || isNaN(duration) || duration === Infinity) {
             await new Promise(resolve => {
-              if ($video.readyState >= 1) return resolve();
-              $video.onloadedmetadata = () => resolve();
-              setTimeout(resolve, 1000);
+              if ($previewVideo.readyState >= 1) return resolve();
+              $previewVideo.onloadedmetadata = () => resolve();
+              setTimeout(resolve, 1500);
             });
-            duration = $video.duration || 15;
+            duration = $previewVideo.duration || 15;
           }
 
           const engine = $('input[name="aiEngine"]:checked').val();
           let rawTranscripts = [];
 
           if (engine === 'local') {
-            updateProgress(35, '기기 자체 AI 모듈 준비 중...');
-            rawTranscripts = await runSafeLocalWhisper(duration);
+            updateProgress(30, '기기 자체 AI (Whisper) 엔진 준비 중...');
+            rawTranscripts = await runRealLocalWhisper(selectedFile, duration);
           } else {
-            updateProgress(40, '초고속 공용 AI 엔진으로 대사 분석 중...');
-            rawTranscripts = await runSafeCloudWhisper(duration);
+            updateProgress(30, '공용 Whisper AI로 실제 음성 대사 인식 중...');
+            rawTranscripts = await runRealCloudWhisper(selectedFile, duration);
           }
 
-          updateProgress(75, '대사를 자연스러운 한국어로 번역하는 중...');
+          if (!rawTranscripts || rawTranscripts.length === 0) {
+            throw new Error('영상 속에서 인식 가능한 음성 대사가 감지되지 않았습니다.');
+          }
+
+          updateProgress(75, '인식된 대사를 자연스러운 한국어로 번역하는 중...');
           subtitles = await translateTranscriptsToKorean(rawTranscripts);
 
           updateProgress(100, '한국어 자막 생성 완료!');
@@ -405,8 +432,8 @@
           }, 500);
 
         } catch (err) {
-          console.error('Error during subtitle generation:', err);
-          alert('처리 중 오류가 발생했습니다: ' + (err.message || '알 수 없는 오류'));
+          console.error('STT/Translation Error:', err);
+          alert('처리 중 알림: ' + (err.message || '음성 분석 중 오류가 발생했습니다.'));
           $('#progressSection').addClass('hidden');
           $('#controlSection').removeClass('opacity-60 pointer-events-none');
         }
@@ -418,68 +445,116 @@
         if (text) $('#progressStatusText').html(`<i class="fa-solid fa-spinner fa-spin"></i> ${text}`);
       }
 
-      // [모드 1] 초고속 공용 클라우드 처리 (메모리 OOM 없이 안전하게 동작)
-      async function runSafeCloudWhisper(duration) {
-        await new Promise(r => setTimeout(r, 600));
+      // [핵심 1] 공용 Whisper AI 연동 (실제 음성 대사 전송 및 인식)
+      async function runRealCloudWhisper(file, duration) {
+        updateProgress(45, '공용 Whisper AI 서버로 실제 음성 대사 분석 중...');
 
-        const segments = [];
-        const sampleDialogue = [
-          "Hello everyone, thank you for watching this video today.",
-          "Let me show you how this technology works right now.",
-          "As you can see, it runs completely in your web browser.",
-          "There is no need for any API key or subscription.",
-          "You can share this freely with your friends and colleagues.",
-          "Everything is processed smoothly and safely.",
-          "Don't forget to save your subtitles when finished!"
-        ];
-
-        let t = 0.5;
-        let segIdx = 1;
-
-        while (t < duration - 1) {
-          const endT = Math.min(t + 2.8 + (Math.random() * 1.5), duration - 0.2);
-          const sampleText = sampleDialogue[(segIdx - 1) % sampleDialogue.length];
-          segments.push({
-            id: segIdx++,
-            start: parseFloat(t.toFixed(2)),
-            end: parseFloat(endT.toFixed(2)),
-            text: sampleText
+        try {
+          // Gradio 공식 JS 클라이언트 동적 로드
+          const { Client } = await import('https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js');
+          
+          // 전 세계에 공개된 오픈소스 Whisper Space 연결
+          const client = await Client.connect('openai/whisper');
+          updateProgress(55, 'Whisper Large 모델이 영상의 소리를 듣는 중...');
+          
+          const result = await client.predict('/predict', {
+            inputs: file,
+            task: 'transcribe'
           });
-          t = endT + 0.8 + (Math.random() * 1.0);
+
+          const rawText = (result && result.data && result.data[0]) ? result.data[0].trim() : '';
+          console.log('Recognized speech:', rawText);
+
+          if (rawText) {
+            return splitTextIntoTimedSegments(rawText, duration);
+          }
+        } catch (gradioErr) {
+          console.warn('Gradio space queue/network fallback:', gradioErr);
         }
 
-        if (segments.length === 0) {
-          segments.push({
-            id: 1,
-            start: 0.5,
-            end: Math.min(4.0, duration),
-            text: "Welcome to this video presentation."
-          });
-        }
-
-        await new Promise(r => setTimeout(r, 800));
-        return segments;
+        // 공용 서버 대기열 지연 시 안전한 2차 AI 엔진으로 전환
+        return await runRealLocalWhisper(file, duration);
       }
 
-      // [모드 2] 기기 자체 AI 안전 가동 (필요 시에만 동적 로드)
-      async function runSafeLocalWhisper(duration) {
+      // [핵심 2] 기기 자체 AI (Transformers.js Whisper)
+      async function runRealLocalWhisper(file, duration) {
+        updateProgress(50, '기기 자체 AI (Whisper-Tiny) 모델 가동 중...');
+
         try {
-          updateProgress(50, '브라우저 Web AI 엔진 로딩 중...');
-          // Transformers.js 동적 임포트 (초기 로딩 시 GPU 충돌 방지)
           const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
           env.allowLocalModels = false;
           
-          updateProgress(65, 'AI 대사 인식 모델 구동 중...');
-          // 안전한 폴백과 함께 처리
-          await new Promise(r => setTimeout(r, 1000));
-          return await runSafeCloudWhisper(duration);
-        } catch (e) {
-          console.warn('Local Whisper fallback to cloud mode:', e);
-          return await runSafeCloudWhisper(duration);
+          const transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny.en');
+          
+          // AudioContext를 통한 안전한 16kHz 오디오 디코딩
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const arrayBuffer = await file.arrayBuffer();
+          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+          audioCtx.close();
+
+          const offlineCtx = new OfflineAudioContext(1, Math.round(audioBuffer.duration * 16000), 16000);
+          const src = offlineCtx.createBufferSource();
+          src.buffer = audioBuffer;
+          src.connect(offlineCtx.destination);
+          src.start();
+          const resampled = await offlineCtx.startRendering();
+          const audioData = resampled.getChannelData(0);
+
+          updateProgress(65, '실제 음성 타임스탬프 계산 중...');
+          const output = await transcriber(audioData, { return_timestamps: true, chunk_length_s: 30 });
+
+          const segments = [];
+          if (output.chunks && output.chunks.length > 0) {
+            output.chunks.forEach((chunk, i) => {
+              if (chunk.text && chunk.text.trim()) {
+                segments.push({
+                  id: i + 1,
+                  start: chunk.timestamp[0] || (i * 3),
+                  end: chunk.timestamp[1] || ((i * 3) + 3),
+                  text: chunk.text.trim()
+                });
+              }
+            });
+            return segments;
+          } else if (output.text && output.text.trim()) {
+            return splitTextIntoTimedSegments(output.text.trim(), duration);
+          }
+        } catch (localErr) {
+          console.warn('Local Whisper error:', localErr);
         }
+
+        // 음성 인식이 실패하거나 무음 영상일 경우 안내 메시지
+        throw new Error('영상 속에서 인식할 수 있는 대사를 찾지 못했습니다. 소리가 명확한 영상인지 확인해주세요.');
       }
 
-      // [핵심] 무료 다이렉트 한국어 번역 엔진 (타임아웃 1.5초 및 CORS 안전 처리)
+      // 대사 텍스트를 문장 단위로 분할하여 동영상 시간에 맞게 타임스탬프 배분
+      function splitTextIntoTimedSegments(fullText, duration) {
+        // 마침표, 물음표, 느낌표 기준으로 문장 분할
+        const sentences = fullText.split(/(?<=[.?!])\s+/).filter(s => s && s.trim().length > 1);
+        
+        if (sentences.length === 0) {
+          sentences.push(fullText);
+        }
+
+        const segments = [];
+        const usableDuration = Math.max(duration - 1.0, 2.0);
+        const timePerSentence = usableDuration / sentences.length;
+
+        sentences.forEach((sentence, idx) => {
+          const start = parseFloat((0.5 + (idx * timePerSentence)).toFixed(2));
+          const end = parseFloat(Math.min(start + timePerSentence - 0.3, duration - 0.1).toFixed(2));
+          segments.push({
+            id: idx + 1,
+            start: start,
+            end: end,
+            text: sentence.trim()
+          });
+        });
+
+        return segments;
+      }
+
+      // [핵심 3] 무료 다이렉트 한국어 번역 엔진
       async function translateTranscriptsToKorean(segments) {
         const results = [];
         for (let i = 0; i < segments.length; i++) {
@@ -499,28 +574,12 @@
       async function translateTextSafely(sourceText) {
         if (!sourceText || !sourceText.trim()) return '';
 
-        // 기본 딕셔너리 즉시 매핑 (지연 시간 0ms)
-        const defaultTranslations = {
-          "Hello everyone, thank you for watching this video today.": "여러분 안녕하세요, 오늘 이 영상을 시청해주셔서 감사합니다.",
-          "Let me show you how this technology works right now.": "이 기술이 지금 어떻게 동작하는지 직접 보여드리겠습니다.",
-          "As you can see, it runs completely in your web browser.": "보시다시피 웹 브라우저 안에서 완벽하게 동작합니다.",
-          "There is no need for any API key or subscription.": "어떤 API 키나 유료 구독도 전혀 필요하지 않습니다.",
-          "You can share this freely with your friends and colleagues.": "친구들과 동료들에게도 자유롭게 공유해보세요.",
-          "Everything is processed smoothly and safely.": "모든 과정이 부드럽고 안전하게 처리됩니다.",
-          "Don't forget to save your subtitles when finished!": "작업이 끝나면 자막 파일을 저장하는 것을 잊지 마세요!",
-          "Welcome to this video presentation.": "영상 발표에 오신 것을 환영합니다."
-        };
-
-        if (defaultTranslations[sourceText]) {
-          return defaultTranslations[sourceText];
-        }
-
-        // MyMemory 무료 API 호출 (1.5초 타임아웃 걸어 멈춤/오류 방지)
+        // MyMemory 무료 공개 API 호출 (1.8초 타임아웃)
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 1500);
+          const timeoutId = setTimeout(() => controller.abort(), 1800);
 
-          const targetUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(sourceText)}&langpair=en|ko`;
+          const targetUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(sourceText)}&langpair=auto|ko`;
           const res = await fetch(targetUrl, { signal: controller.signal });
           clearTimeout(timeoutId);
 
@@ -534,8 +593,7 @@
             }
           }
         } catch (e) {
-          // CORS 오류나 타임아웃 시에도 절대 멈추지 않고 원문 반환
-          console.warn('Translation API skipped, using fallback:', e.message);
+          console.warn('Translation API error, fallback:', e);
         }
 
         return sourceText;
@@ -559,27 +617,24 @@
                   <i class="fa-solid fa-trash-can"></i>
                 </button>
               </div>
-              <div class="text-[11px] text-slate-500 truncate" title="${sub.original || ''}">
-                <i class="fa-solid fa-quote-left text-[9px]"></i> ${sub.original || '(원문 없음)'}
+              <div class="text-[11px] text-slate-400 truncate" title="${sub.original || ''}">
+                <span class="text-indigo-400 font-medium">원문:</span> ${sub.original || '(인식된 원문)'}
               </div>
               <input type="text" class="sub-text-input w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 transition-colors font-medium" value="${escapeHtml(sub.text)}" placeholder="한국어 자막 입력">
             </div>
           `);
 
-          // 자막 수정 시 실시간 반영
           item.find('.sub-text-input').on('input', function() {
             sub.text = $(this).val();
             updateSubtitleOverlay();
           });
 
-          // 타임코드 클릭 시 해당 비디오 시간으로 이동
           item.find('.btn-seek-video').on('click', function(e) {
             e.preventDefault();
-            $video.currentTime = sub.start;
-            $video.play();
+            $previewVideo.currentTime = sub.start;
+            $previewVideo.play();
           });
 
-          // 삭제 버튼
           item.find('.btn-delete-sub').on('click', function(e) {
             e.preventDefault();
             subtitles.splice(idx, 1);
@@ -592,10 +647,10 @@
       }
 
       // 5. 비디오 재생 시 자막 오버레이 실시간 싱크 동기화
-      $video.addEventListener('timeupdate', updateSubtitleOverlay);
+      $previewVideo.addEventListener('timeupdate', updateSubtitleOverlay);
 
       function updateSubtitleOverlay() {
-        const curTime = $video.currentTime;
+        const curTime = $previewVideo.currentTime;
         const activeSub = subtitles.find(s => curTime >= s.start && curTime <= s.end);
 
         const overlay = $('#subtitleOverlay');
@@ -644,7 +699,7 @@
       // 자막 추가 버튼
       $('#btnAddSubtitle').on('click', function(e) {
         e.preventDefault();
-        const curTime = parseFloat($video.currentTime.toFixed(2));
+        const curTime = parseFloat($previewVideo.currentTime.toFixed(2));
         subtitles.push({
           id: Date.now(),
           start: curTime,
@@ -656,7 +711,19 @@
         renderSubtitleList();
       });
 
-      // 7. SRT 자막 파일 즉시 다운로드 (1초 소요)
+      // 날짜시간 포맷팅 함수 (YYYYMMDD_HHMMSS)
+      function getFormattedDateTime() {
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        return `${yyyy}${mm}${dd}_${hh}${min}${ss}`;
+      }
+
+      // 7. SRT 자막 파일 즉시 다운로드 (파일명에 _일자_시간 부여)
       $('#btnDownloadSrt').on('click', function(e) {
         e.preventDefault();
         if (!subtitles.length) return alert('생성된 자막이 없습니다.');
@@ -672,31 +739,58 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const originalName = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "subtitles";
-        a.download = `${originalName}_한국어자막.srt`;
+        
+        const baseName = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "subtitles";
+        a.download = `${baseName}_한국어자막_${getFormattedDateTime()}.srt`;
+        
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       });
 
-      // 8. Canvas 기반 자막 합성 영상 인코딩 및 다운로드 (Hardsub MP4/WebM)
+      // 8. Canvas 기반 자막 합성 영상 인코딩 및 다운로드 (미리보기 비디오와 완전 격리!)
       $('#btnExportHardsubVideo').on('click', async function(e) {
         e.preventDefault();
         if (!subtitles.length) return alert('생성된 자막이 없습니다.');
+        if (isExporting) return;
 
-        const btn = $(this);
-        btn.prop('disabled', true).addClass('opacity-50');
-        $('#exportProgressContainer').removeClass('hidden');
+        isExporting = true;
+        $('#exportModal').removeClass('hidden');
+        $('#exportModalProgressBar').css('width', '0%');
+        $('#exportModalPercent').text('0%');
 
         try {
           const canvas = $('#renderCanvas')[0];
           const ctx = canvas.getContext('2d');
-          
-          canvas.width = $video.videoWidth || 1280;
-          canvas.height = $video.videoHeight || 720;
+
+          // 미리보기 플레이어($previewVideo)와 완전히 분리된 독립 오프스크린 비디오 생성!
+          // 덕분에 사용자가 미리보기 비디오 바를 움직여도 합성 진행률에 1도 영향 없음!
+          exportVideoElem = document.createElement('video');
+          exportVideoElem.src = videoObjectUrl;
+          exportVideoElem.muted = false;
+          exportVideoElem.playsInline = true;
+
+          await new Promise(resolve => {
+            exportVideoElem.onloadedmetadata = () => resolve();
+            setTimeout(resolve, 1000);
+          });
+
+          canvas.width = exportVideoElem.videoWidth || 1280;
+          canvas.height = exportVideoElem.videoHeight || 720;
 
           const stream = canvas.captureStream(30);
+
+          // 오디오 트랙 캡처
+          try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const srcNode = audioCtx.createMediaElementSource(exportVideoElem);
+            const destNode = audioCtx.createMediaStreamDestination();
+            srcNode.connect(destNode);
+            destNode.stream.getAudioTracks().forEach(track => stream.addTrack(track));
+          } catch (audioErr) {
+            console.warn('Audio stream attach warning:', audioErr);
+          }
 
           let mimeType = 'video/webm;codecs=vp9,opus';
           if (!MediaRecorder.isTypeSupported(mimeType)) {
@@ -706,71 +800,93 @@
             }
           }
 
-          const recorder = new MediaRecorder(stream, { mimeType: mimeType });
+          exportRecorder = new MediaRecorder(stream, { mimeType: mimeType });
           const chunks = [];
 
-          recorder.ondataavailable = ev => {
+          exportRecorder.ondataavailable = ev => {
             if (ev.data.size > 0) chunks.push(ev.data);
           };
 
-          recorder.onstop = () => {
+          exportRecorder.onstop = () => {
+            if (!isExporting) return; // 취소된 경우 중단
+            
             const blob = new Blob(chunks, { type: mimeType });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            const originalName = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "subtitled_video";
+            
+            // 파일명에 _일자_시간 추가
+            const baseName = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "video";
             const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
-            a.download = `[한국어자막]_${originalName}.${ext}`;
+            a.download = `[한국어자막]_${baseName}_${getFormattedDateTime()}.${ext}`;
+            
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            btn.prop('disabled', false).removeClass('opacity-50');
-            $('#exportProgressContainer').addClass('hidden');
-            $('#exportProgressBar').css('width', '0%');
-            alert('자막 합성 영상 저장이 완료되었습니다!');
+            finishExport();
+            alert('자막 합성 영상 다운로드가 완료되었습니다!');
           };
 
-          $video.currentTime = 0;
-          recorder.start();
-          $video.play();
+          exportVideoElem.currentTime = 0;
+          exportRecorder.start();
+          await exportVideoElem.play();
 
-          function renderFrame() {
-            if ($video.paused || $video.ended) {
-              if ($video.ended) {
-                recorder.stop();
-                return;
+          function renderExportFrame() {
+            if (!isExporting) return;
+
+            if (exportVideoElem.ended || exportVideoElem.currentTime >= exportVideoElem.duration) {
+              if (exportRecorder && exportRecorder.state === 'recording') {
+                exportRecorder.stop();
               }
+              return;
             }
 
-            ctx.drawImage($video, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(exportVideoElem, 0, 0, canvas.width, canvas.height);
 
-            const curTime = $video.currentTime;
+            const curTime = exportVideoElem.currentTime;
             const activeSub = subtitles.find(s => curTime >= s.start && curTime <= s.end);
 
             if (activeSub && activeSub.text.trim()) {
               drawCanvasSubtitle(ctx, canvas, activeSub.text);
             }
 
-            const progress = Math.min(100, Math.round((curTime / $video.duration) * 100));
-            $('#exportProgressBar').css('width', progress + '%');
-            $('#exportProgressPercent').text(progress + '%');
+            // 전용 모달 프로그레스 바 업데이트
+            const progress = Math.min(100, Math.round((curTime / exportVideoElem.duration) * 100));
+            $('#exportModalProgressBar').css('width', progress + '%');
+            $('#exportModalPercent').text(progress + '%');
 
-            if (!$video.ended) {
-              requestAnimationFrame(renderFrame);
-            }
+            requestAnimationFrame(renderExportFrame);
           }
 
-          renderFrame();
+          renderExportFrame();
 
         } catch (err) {
-          console.error(err);
+          console.error('Export error:', err);
           alert('영상 렌더링 중 오류: ' + err.message);
-          btn.prop('disabled', false).removeClass('opacity-50');
-          $('#exportProgressContainer').addClass('hidden');
+          finishExport();
         }
       });
+
+      // 합성 취소 버튼
+      $('#btnCancelExport').on('click', function(e) {
+        e.preventDefault();
+        finishExport();
+      });
+
+      function finishExport() {
+        isExporting = false;
+        if (exportRecorder && exportRecorder.state === 'recording') {
+          exportRecorder.stop();
+        }
+        if (exportVideoElem) {
+          exportVideoElem.pause();
+          exportVideoElem.src = '';
+          exportVideoElem = null;
+        }
+        $('#exportModal').addClass('hidden');
+      }
 
       function drawCanvasSubtitle(ctx, canvas, text) {
         ctx.save();
