@@ -68,10 +68,10 @@
           <i class="fa-solid fa-file-lines text-sm"></i>
         </span>
         <h1 class="font-extrabold text-base sm:text-lg tracking-tight bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
-          AutoSub KR 66
+          AutoSub KR 77
         </h1>
         <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold hidden sm:inline-flex items-center gap-1">
-          <i class="fa-solid fa-circle-check"></i> 모든 파일 100% 터치 활성화판
+          <i class="fa-solid fa-bolt"></i> 음원 파일 0초 직행 Groq 완성판
         </span>
       </div>
 
@@ -714,37 +714,65 @@
 
           // [모드별 분기 처리]
           if (engine === 'cloud_api') {
-            // Groq Cloud API 초고속 모드 (모바일/PC 2GB+ 0초 분리 기술 적용)
-            if (selectedFile.size <= 24 * 1024 * 1024 && (selectedFile.type.startsWith('audio/') || selectedFile.type.startsWith('video/'))) {
-              updateProgress(35, '25MB 이하 파일 감지: 추출 대기 없이 Groq로 즉시 직행 전송...');
-              rawSegments = await runGroqWhisperApi(selectedFile, sourceLang, 0);
-            } else {
-              // 대용량 파일: 1순위 초고속 0초 Demuxer 시도 -> 실패 시 2순위 재생 캡처
+            const isAudioFile = selectedFile.type.startsWith('audio/') || 
+                                /\.(m4a|mp3|wav|aac|ogg|flac)$/i.test(selectedFile.name);
+
+            // [핵심 1] 사용자가 오디오 파일을 넣었을 때 -> 재생 대기 0초! 즉시 Groq로 직행 전송!
+            if (isAudioFile) {
+              const MAX_CHUNK = 20 * 1024 * 1024; // 20MB 단위
+
+              if (selectedFile.size <= MAX_CHUNK) {
+                updateProgress(35, `오디오 파일(${Math.round(selectedFile.size / (1024*1024))}MB) 감지: 재생 대기 0초, Groq로 즉시 직행 전송...`);
+                rawSegments = await runGroqWhisperApi(selectedFile, sourceLang, 0);
+              } else {
+                const totalChunks = Math.ceil(selectedFile.size / MAX_CHUNK);
+                const estDuration = $previewVideo.duration || 8604;
+                const timePerChunk = estDuration / totalChunks;
+
+                updateProgress(25, `대용량 오디오(${Math.round(selectedFile.size / (1024*1024))}MB) 확인: ${totalChunks}개 구간으로 0초 분할 전송 시작...`);
+
+                for (let c = 0; c < totalChunks; c++) {
+                  const startByte = c * MAX_CHUNK;
+                  const endByte = Math.min(startByte + MAX_CHUNK, selectedFile.size);
+                  const chunkBlob = selectedFile.slice(startByte, endByte, selectedFile.type || 'audio/m4a');
+                  const chunkStartTime = c * timePerChunk;
+
+                  const pct = Math.round(30 + ((c + 1) / totalChunks) * 50);
+                  updateProgress(pct, `Groq Whisper Large-v3 분석 중 [구간 ${c + 1}/${totalChunks}]...`);
+
+                  const segs = await runGroqWhisperApi(chunkBlob, sourceLang, chunkStartTime);
+                  rawSegments = rawSegments.concat(segs);
+                }
+              }
+            } 
+            // [핵심 2] 동영상 파일을 넣었을 때 -> 초고속 0초 Demuxer 시도 -> 실패 시 폴백
+            else {
               let processedViaDemux = false;
               try {
-                updateProgress(15, '초고속 0초 오디오 분리 시도 중 (비디오 재생 대기 없음)...');
+                updateProgress(15, '동영상에서 0초 오디오 분리 시도 중 (비디오 99% 건너뛰기)...');
                 const targetDuration = clipOption !== 'all' ? maxDuration : null;
                 const audioChunks = await demuxMp4AudioFast(selectedFile, targetDuration);
 
                 if (audioChunks && audioChunks.length > 0) {
                   processedViaDemux = true;
-                  updateProgress(45, `오디오 분리 완료! 총 ${audioChunks.length}개 구간을 Groq로 초고속 전송 중...`);
+                  updateProgress(45, `초고속 분리 성공! 총 ${audioChunks.length}개 구간을 Groq로 전송 중...`);
 
                   for (let i = 0; i < audioChunks.length; i++) {
                     const chk = audioChunks[i];
                     const pct = Math.round(45 + ((i + 1) / audioChunks.length) * 35);
-                    updateProgress(pct, `Groq Whisper Large-v3 분석 중 [구간 ${i + 1}/${audioChunks.length}]...`);
+                    updateProgress(pct, `Groq Whisper 분석 중 [구간 ${i + 1}/${audioChunks.length}]...`);
                     const segs = await runGroqWhisperApi(chk.blob, sourceLang, chk.startTime);
                     rawSegments = rawSegments.concat(segs);
                   }
                 }
               } catch (demuxErr) {
                 console.warn('Fast Demux fallback triggered:', demuxErr);
+                $('#progressDetail span').text(`[안내] 초고속 분리 실패 -> 가속 재생 모드로 전환됨`);
               }
 
               // 폴백: 미디어 스트림 재생 캡처
               if (!processedViaDemux) {
-                updateProgress(15, `오디오 트랙 추출 중 (${Math.round(maxDuration)}초 분량)...`);
+                updateProgress(15, `오디오 트랙 추출 중 (${Math.round(maxDuration)}초 분량, 2배속 가속)...`);
                 const audioBlob = await extractAudioChunkFast($previewVideo, maxDuration);
                 updateProgress(55, 'Groq Cloud API로 초고속 Whisper 대사 인식 중...');
                 rawSegments = await runGroqWhisperApi(audioBlob, sourceLang, 0);
