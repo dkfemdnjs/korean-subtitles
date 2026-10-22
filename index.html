@@ -713,9 +713,16 @@
           // [모드별 분기 처리]
           if (engine === 'cloud_api') {
             // Groq Cloud API 초고속 모드
-            updateProgress(15, `오디오 고속 추출 중 (${Math.round(maxDuration)}초 분량)...`);
-            const audioBlob = await extractAudioChunkFast($previewVideo, maxDuration);
-            updateProgress(45, 'Groq Cloud API로 초고속 Whisper 대사 인식 중...');
+            let audioBlob;
+            // 24MB 이하의 파일이거나 순수 오디오 파일이면 추출 대기 없이 0초 직행 전송!
+            if (selectedFile.size <= 24 * 1024 * 1024 && (selectedFile.type.startsWith('audio/') || selectedFile.type.startsWith('video/'))) {
+              updateProgress(35, '25MB 이하 파일 감지: 오디오 추출 건너뛰고 Groq로 즉시 직행 전송...');
+              audioBlob = selectedFile;
+            } else {
+              updateProgress(15, `오디오 고속 추출 중 (${Math.round(maxDuration)}초 분량)...`);
+              audioBlob = await extractAudioChunkFast($previewVideo, maxDuration);
+            }
+            updateProgress(55, 'Groq Cloud API로 초고속 Whisper 대사 인식 중...');
             rawSegments = await runGroqWhisperApi(audioBlob, sourceLang);
           } 
           else if (engine === 'web_speech') {
@@ -800,52 +807,113 @@
 
       // ========================================================
       // [핵심 기술 1] 대용량 영상에서 무음 초고속 오디오 추출
-      // 스피커 소음 0%, 탭 크래시 0%, 최대 4배속~8배속 가속 캡처
+      // iOS(아이폰) / Android / PC 완벽 호환 (스피커 무음, 탭 크래시 0%)
       // ========================================================
       async function extractAudioChunkFast(videoElem, maxDurationSec) {
         return new Promise(async (resolve, reject) => {
+          let tempVideo = null;
+          let audioCtx = null;
+
           try {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+            // 화면 꺼짐 방지 (모바일 슬립 방지)
+            if ('wakeLock' in navigator) {
+              navigator.wakeLock.request('screen').catch(() => {});
+            }
+
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContextClass({ sampleRate: 16000 });
+            if (audioCtx.state === 'suspended') {
+              await audioCtx.resume().catch(() => {});
+            }
             const dest = audioCtx.createMediaStreamDestination();
 
-            const tempVideo = document.createElement('video');
+            tempVideo = document.createElement('video');
             tempVideo.src = videoObjectUrl;
+            tempVideo.setAttribute('playsinline', 'true');
+            tempVideo.setAttribute('webkit-playsinline', 'true');
+            tempVideo.setAttribute('x5-playsinline', 'true');
             tempVideo.playsInline = true;
-            tempVideo.muted = false; // 소리 트랙 활성화를 위해 muted는 false
+            tempVideo.muted = false;
             tempVideo.volume = 1.0;
 
+            // iOS WebKit 백그라운드 멈춤 방지를 위해 DOM에 미니 뷰어로 삽입
+            tempVideo.style.position = 'fixed';
+            tempVideo.style.top = '-9999px';
+            tempVideo.style.left = '-9999px';
+            tempVideo.style.width = '1px';
+            tempVideo.style.height = '1px';
+            tempVideo.style.opacity = '0.01';
+            tempVideo.style.pointerEvents = 'none';
+            document.body.appendChild(tempVideo);
+
             await new Promise(r => {
+              if (tempVideo.readyState >= 1) return r();
               tempVideo.onloadedmetadata = () => r();
-              setTimeout(r, 1000);
+              setTimeout(r, 1200);
             });
 
-            // 스피커(audioCtx.destination)로는 연결하지 않고 dest로만 라우팅! -> 사용자 스피커 무음!
+            // 스피커(audioCtx.destination)로는 연결하지 않고 dest로만 라우팅! -> 스피커 무음
             const source = audioCtx.createMediaElementSource(tempVideo);
             source.connect(dest);
 
-            let mimeType = 'audio/webm;codecs=opus';
-            if (!MediaRecorder.isTypeSupported(mimeType)) mimeType = 'audio/webm';
+            // iOS / Android / PC 지원 MIME 타입 자동 선택
+            let mimeType = '';
+            const candidates = [
+              'audio/webm;codecs=opus',
+              'audio/webm',
+              'audio/mp4',
+              'audio/aac',
+              ''
+            ];
+            for (const c of candidates) {
+              if (!c || (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c))) {
+                mimeType = c;
+                break;
+              }
+            }
             
             const recorder = new MediaRecorder(dest.stream, mimeType ? { mimeType } : undefined);
             const chunks = [];
 
             recorder.ondataavailable = e => {
-              if (e.data.size > 0) chunks.push(e.data);
+              if (e.data && e.data.size > 0) chunks.push(e.data);
+            };
+
+            const cleanup = () => {
+              if (tempVideo) {
+                tempVideo.pause();
+                tempVideo.src = '';
+                if (tempVideo.parentNode) tempVideo.parentNode.removeChild(tempVideo);
+                tempVideo = null;
+              }
+              if (audioCtx) {
+                audioCtx.close().catch(() => {});
+                audioCtx = null;
+              }
             };
 
             recorder.onstop = () => {
-              tempVideo.pause();
-              tempVideo.src = '';
-              audioCtx.close();
-              const blob = new Blob(chunks, { type: mimeType || 'audio/webm' });
+              const detectedType = mimeType || (chunks[0] ? chunks[0].type : 'audio/mp4');
+              const blob = new Blob(chunks, { type: detectedType });
+              cleanup();
               resolve(blob);
             };
 
-            // 안정적인 3.0배속 가속 재생 (대용량 영상 버퍼 멈춤 방지)
-            tempVideo.playbackRate = 3.0;
+            // iOS 모바일은 2.0배속, PC/안드로이드는 3.0배속으로 최적 가속
+            const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const speed = isIOS ? 2.0 : 3.0;
+            tempVideo.playbackRate = speed;
             tempVideo.currentTime = 0;
             recorder.start(250);
-            await tempVideo.play().catch(e => console.warn('Play error:', e));
+
+            const playPromise = tempVideo.play();
+            if (playPromise !== undefined) {
+              playPromise.catch(e => {
+                console.warn('Playback warning, fallback to muted play:', e);
+                tempVideo.muted = true;
+                tempVideo.play().catch(err => console.error('Final play error:', err));
+              });
+            }
 
             let lastCurTime = 0;
             let stallCounter = 0;
@@ -854,17 +922,20 @@
               if (abortController && abortController.signal.aborted) {
                 clearInterval(interval);
                 if (recorder.state === 'recording') recorder.stop();
+                cleanup();
                 return reject(new Error('사용자에 의해 취소되었습니다.'));
               }
-              const cur = tempVideo.currentTime;
+              const cur = tempVideo ? tempVideo.currentTime : maxDurationSec;
 
-              // 버퍼 지연(Stall) 감지 및 강제 탈출 (멈춤 완벽 차단)
+              // 버퍼 지연(Stall) 감지 및 강제 탈출
               if (Math.abs(cur - lastCurTime) < 0.05) {
                 stallCounter++;
-                if (stallCounter >= 8) { // 약 2초간 멈춤 발생 시
+                if (stallCounter >= 8) {
                   console.warn('Playback stall detected at ' + cur + 's, nudging forward...');
-                  tempVideo.currentTime = cur + 0.5;
-                  tempVideo.play().catch(() => {});
+                  if (tempVideo) {
+                    tempVideo.currentTime = cur + 0.5;
+                    tempVideo.play().catch(() => {});
+                  }
                   stallCounter = 0;
                 }
               } else {
@@ -873,15 +944,17 @@
               }
 
               const p = Math.min(38, Math.round(15 + (cur / maxDurationSec) * 23));
-              updateProgress(p, `음성 트랙 고속 추출 중 (${Math.round(cur)}s / ${Math.round(maxDurationSec)}s, 3배속 가속)...`);
+              updateProgress(p, `음성 트랙 고속 추출 중 (${Math.round(cur)}s / ${Math.round(maxDurationSec)}s, ${speed}배속)...`);
 
-              if (cur >= maxDurationSec || tempVideo.ended) {
+              if (cur >= maxDurationSec || (tempVideo && tempVideo.ended)) {
                 clearInterval(interval);
                 if (recorder.state === 'recording') recorder.stop();
               }
             }, 250);
 
           } catch (err) {
+            if (tempVideo && tempVideo.parentNode) tempVideo.parentNode.removeChild(tempVideo);
+            if (audioCtx) audioCtx.close().catch(() => {});
             reject(err);
           }
         });
@@ -1071,14 +1144,26 @@
           }
         }
 
+        updateProgress(50, '오디오 파일을 Groq 전송용으로 패키징 중...');
+
+        let ext = 'webm';
+        if (audioBlob.type) {
+          if (audioBlob.type.includes('mp4')) ext = 'm4a';
+          else if (audioBlob.type.includes('aac')) ext = 'aac';
+          else if (audioBlob.type.includes('wav')) ext = 'wav';
+          else if (audioBlob.type.includes('ogg')) ext = 'ogg';
+        }
+
         const formData = new FormData();
-        formData.append('file', audioBlob, 'audio.webm');
+        formData.append('file', audioBlob, `audio.${ext}`);
         formData.append('model', 'whisper-large-v3');
         formData.append('response_format', 'verbose_json');
         formData.append('temperature', '0.0');
         if (language && language !== 'auto') {
           formData.append('language', language);
         }
+
+        updateProgress(65, 'Groq LPU 초고속 클라우드로 전송 및 Whisper Large-v3 분석 중...');
 
         const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
           method: 'POST',
@@ -1090,9 +1175,10 @@
 
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          throw new Error(`Groq API 오류: ${errData.error?.message || res.statusText}`);
+          throw new Error(`Groq API 오류 (${res.status}): ${errData.error?.message || res.statusText}`);
         }
 
+        updateProgress(80, 'Groq Whisper 결과 타임스탬프 파싱 중...');
         const data = await res.json();
         const segments = [];
 
