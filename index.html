@@ -467,7 +467,7 @@
     <p>AutoSub KR • 100% Client-Side Pure Web Architecture for GitHub Pages</p>
   </footer>
 
-  <!-- 인라인 Web Worker 스크립트 (Transformers.js Whisper 백그라운드 추론) -->
+  <!-- 인라인 Web Worker 스크립트 (Transformers.js Whisper 백그라운드 추론 - 실시간 청크 스트리밍) -->
   <script id="whisperWorkerScript" type="javascript/worker">
     let transcriber = null;
 
@@ -476,40 +476,85 @@
 
       if (type === 'init_and_transcribe') {
         try {
-          self.postMessage({ status: 'progress', percent: 45, text: 'AI 모델 로딩 중 (Transformers.js Whisper-Tiny)...' });
+          self.postMessage({ status: 'progress', percent: 45, text: 'AI 모델 로딩 중 (Transformers.js Whisper-Tiny 다국어)...' });
           
           if (!transcriber) {
             const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
             env.allowLocalModels = false;
             
-            // 한국어 등 다국어를 완벽 지원하는 Xenova/whisper-tiny 사용
             transcriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny', {
               progress_callback: (p) => {
                 if (p.status === 'progress') {
-                  const pct = Math.round(45 + (p.progress || 0) * 0.25);
+                  const pct = Math.round(45 + (p.progress || 0) * 0.20);
                   self.postMessage({ status: 'progress', percent: pct, text: `AI 가중치 다운로드 중 (${Math.round(p.progress || 0)}%)...` });
                 }
               }
             });
           }
 
-          self.postMessage({ status: 'progress', percent: 75, text: '음성 신호 신경망 분석 및 타임스탬프 계산 중...' });
+          self.postMessage({ status: 'progress', percent: 65, text: '음성 신호 청크 분석 시작...' });
 
+          // 전체 오디오를 30초 단위(480,000 샘플)로 나누어 순차 처리하여 멈춤 없이 실시간 진행 보고!
+          const SAMPLE_RATE = 16000;
+          const CHUNK_DURATION = 30; // 30초
+          const CHUNK_SIZE = SAMPLE_RATE * CHUNK_DURATION;
+          const totalSamples = audioData.length;
+          const totalChunks = Math.max(1, Math.ceil(totalSamples / CHUNK_SIZE));
+
+          const allSegments = [];
           const opts = {
-            return_timestamps: true,
-            chunk_length_s: 30,
-            stride_length_s: 5
+            return_timestamps: true
           };
-          if (language && language !== 'auto') {
-            opts.language = language;
-          }
-          if (task) {
-            opts.task = task;
+          if (language && language !== 'auto') opts.language = language;
+          if (task) opts.task = task;
+
+          for (let c = 0; c < totalChunks; c++) {
+            const startSample = c * CHUNK_SIZE;
+            const endSample = Math.min(startSample + CHUNK_SIZE, totalSamples);
+            const chunkAudio = audioData.subarray(startSample, endSample);
+            const chunkTimeOffset = c * CHUNK_DURATION;
+
+            const progressPct = Math.round(65 + ((c + 1) / totalChunks) * 30);
+            self.postMessage({ 
+              status: 'progress', 
+              percent: progressPct, 
+              text: `대사 신경망 분석 중 [청크 ${c + 1}/${totalChunks}] (${Math.round(chunkTimeOffset)}초 구간)...` 
+            });
+
+            // 0.5초 이하의 너무 짧은 무음 청크는 스킵
+            if (chunkAudio.length < SAMPLE_RATE * 0.5) continue;
+
+            try {
+              const output = await transcriber(chunkAudio, opts);
+
+              if (output.chunks && output.chunks.length > 0) {
+                output.chunks.forEach((chk, i) => {
+                  if (chk.text && chk.text.trim()) {
+                    const seg = {
+                      start: parseFloat((chunkTimeOffset + (chk.timestamp[0] ?? (i * 3))).toFixed(2)),
+                      end: parseFloat((chunkTimeOffset + (chk.timestamp[1] ?? ((i * 3) + 3))).toFixed(2)),
+                      text: chk.text.trim()
+                    };
+                    allSegments.push(seg);
+                    // 실시간 세그먼트 전달!
+                    self.postMessage({ status: 'live_segment', segment: seg });
+                  }
+                });
+              } else if (output.text && output.text.trim()) {
+                const seg = {
+                  start: parseFloat(chunkTimeOffset.toFixed(2)),
+                  end: parseFloat((chunkTimeOffset + (chunkAudio.length / SAMPLE_RATE)).toFixed(2)),
+                  text: output.text.trim()
+                };
+                allSegments.push(seg);
+                self.postMessage({ status: 'live_segment', segment: seg });
+              }
+            } catch (chunkErr) {
+              console.warn(`Chunk ${c} transcription error:`, chunkErr);
+            }
           }
 
-          const output = await transcriber(audioData, opts);
-
-          self.postMessage({ status: 'complete', result: output });
+          self.postMessage({ status: 'complete', result: { segments: allSegments } });
         } catch (err) {
           self.postMessage({ status: 'error', error: err.message || String(err) });
         }
@@ -796,21 +841,39 @@
               resolve(blob);
             };
 
-            // 최대 4배속 가속 재생으로 대기 시간 대폭 단축
-            tempVideo.playbackRate = 4.0;
+            // 안정적인 3.0배속 가속 재생 (대용량 영상 버퍼 멈춤 방지)
+            tempVideo.playbackRate = 3.0;
             tempVideo.currentTime = 0;
             recorder.start(250);
-            await tempVideo.play();
+            await tempVideo.play().catch(e => console.warn('Play error:', e));
+
+            let lastCurTime = 0;
+            let stallCounter = 0;
 
             const interval = setInterval(() => {
               if (abortController && abortController.signal.aborted) {
                 clearInterval(interval);
-                recorder.stop();
+                if (recorder.state === 'recording') recorder.stop();
                 return reject(new Error('사용자에 의해 취소되었습니다.'));
               }
               const cur = tempVideo.currentTime;
+
+              // 버퍼 지연(Stall) 감지 및 강제 탈출 (멈춤 완벽 차단)
+              if (Math.abs(cur - lastCurTime) < 0.05) {
+                stallCounter++;
+                if (stallCounter >= 8) { // 약 2초간 멈춤 발생 시
+                  console.warn('Playback stall detected at ' + cur + 's, nudging forward...');
+                  tempVideo.currentTime = cur + 0.5;
+                  tempVideo.play().catch(() => {});
+                  stallCounter = 0;
+                }
+              } else {
+                stallCounter = 0;
+                lastCurTime = cur;
+              }
+
               const p = Math.min(38, Math.round(15 + (cur / maxDurationSec) * 23));
-              updateProgress(p, `음성 트랙 고속 추출 중 (${Math.round(cur)}s / ${Math.round(maxDurationSec)}s, 4배속)...`);
+              updateProgress(p, `음성 트랙 고속 추출 중 (${Math.round(cur)}s / ${Math.round(maxDurationSec)}s, 3배속 가속)...`);
 
               if (cur >= maxDurationSec || tempVideo.ended) {
                 clearInterval(interval);
@@ -868,34 +931,28 @@
               activeWorker = new Worker(workerUrl);
             }
 
+            const liveSegments = [];
+
             activeWorker.onmessage = (e) => {
-              const { status, percent, text, result, error } = e.data;
+              const { status, percent, text, segment, result, error } = e.data;
               if (status === 'progress') {
                 updateProgress(percent, text);
+              } else if (status === 'live_segment') {
+                // 실시간 대사 추출 이벤트 (화면에 대사가 하나씩 올라옴!)
+                if (segment && segment.text) {
+                  liveSegments.push(segment);
+                  $('#progressDetail span').text(`[실시간 대사 감지] "${segment.text}"`);
+                }
               } else if (status === 'complete') {
                 activeWorker.terminate();
                 activeWorker = null;
                 URL.revokeObjectURL(workerUrl);
 
-                const segments = [];
-                if (result.chunks && result.chunks.length > 0) {
-                  result.chunks.forEach((chunk, i) => {
-                    if (chunk.text && chunk.text.trim()) {
-                      segments.push({
-                        start: chunk.timestamp[0] ?? (i * 3),
-                        end: chunk.timestamp[1] ?? ((i * 3) + 3),
-                        text: chunk.text.trim()
-                      });
-                    }
-                  });
-                } else if (result.text && result.text.trim()) {
-                  segments.push({
-                    start: 0.5,
-                    end: Math.min(5.0, $previewVideo.duration || 5.0),
-                    text: result.text.trim()
-                  });
-                }
-                resolve(segments);
+                const finalSegments = (result && result.segments && result.segments.length > 0)
+                  ? result.segments
+                  : (liveSegments.length > 0 ? liveSegments : []);
+
+                resolve(finalSegments);
               } else if (status === 'error') {
                 activeWorker.terminate();
                 activeWorker = null;
